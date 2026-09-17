@@ -3,3 +3,4 @@
 /node_modules/
 .phpunit.result.cache
 .DS_Store
+/.demo/

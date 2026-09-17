@@ -12,5 +12,8 @@
 		"WP_DEBUG": true,
 		"WP_DEBUG_LOG": true,
 		"WP_DEBUG_DISPLAY": false
+	},
+	"lifecycleScripts": {
+		"afterStart": "bin/demo-setup.sh"
 	}
 }
