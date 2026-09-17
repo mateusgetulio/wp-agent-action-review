@@ -28,7 +28,7 @@ tests_add_filter(
 tests_add_filter(
 	'setup_theme',
 	static function (): void {
-		AgentActionReview\Pending\PendingActionTable::install();
+		AgentActionReview\Plugin::install_storage();
 	}
 );
 

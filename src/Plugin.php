@@ -9,12 +9,22 @@ namespace AgentActionReview;
 
 defined( 'ABSPATH' ) || exit;
 
+use AgentActionReview\Abilities\Registrar;
+use AgentActionReview\Actions\PostRead;
+use AgentActionReview\Actions\PostTitleUpdate;
+use AgentActionReview\Actions\PostTrash;
+use AgentActionReview\Audit\EventLog;
 use AgentActionReview\Pending\PendingActionTable;
+use AgentActionReview\Policy\Executor;
 
 /**
  * Checks dependencies and wires the plugin's services.
  */
 final class Plugin {
+
+	public const DB_VERSION = '2';
+
+	public const DB_VERSION_OPTION = 'agent_action_review_db_version';
 
 	/**
 	 * Classes and functions this plugin cannot run without.
@@ -39,7 +49,18 @@ final class Plugin {
 			return;
 		}
 
+		self::install_storage();
+	}
+
+	/**
+	 * Create or update both tables.
+	 *
+	 * @return void
+	 */
+	public static function install_storage(): void {
 		PendingActionTable::install();
+		EventLog::install();
+		update_option( self::DB_VERSION_OPTION, self::DB_VERSION, true );
 	}
 
 	/**
@@ -77,7 +98,24 @@ final class Plugin {
 			return;
 		}
 
-		PendingActionTable::maybe_install();
+		if ( self::DB_VERSION !== get_option( self::DB_VERSION_OPTION ) ) {
+			self::install_storage();
+		}
+
+		$pending  = new PendingActionTable();
+		$events   = new EventLog();
+		$executor = new Executor( $pending, $events );
+
+		( new Registrar( $executor, self::handlers() ) )->register();
+	}
+
+	/**
+	 * The actions an agent can request.
+	 *
+	 * @return array<int, PostRead|PostTitleUpdate|PostTrash>
+	 */
+	public static function handlers(): array {
+		return array( new PostRead(), new PostTitleUpdate(), new PostTrash() );
 	}
 
 	/**

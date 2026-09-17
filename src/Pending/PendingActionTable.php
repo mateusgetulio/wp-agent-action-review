@@ -21,10 +21,6 @@ use AgentsAPI\AI\Approvals\WP_Agent_Pending_Action_Store;
  */
 final class PendingActionTable implements WP_Agent_Pending_Action_Store {
 
-	public const DB_VERSION = '1';
-
-	public const DB_VERSION_OPTION = 'agent_action_review_db_version';
-
 	private const JSON_COLUMNS = array( 'preview', 'apply_input', 'workspace', 'resolution_result', 'resolution_metadata', 'metadata' );
 
 	private const TIME_COLUMNS = array( 'created_at', 'expires_at', 'resolved_at' );
@@ -77,19 +73,6 @@ final class PendingActionTable implements WP_Agent_Pending_Action_Store {
 				KEY creator (creator)
 			) {$charset};"
 		);
-
-		update_option( self::DB_VERSION_OPTION, self::DB_VERSION, true );
-	}
-
-	/**
-	 * Install when the stored schema version is missing or old.
-	 *
-	 * @return void
-	 */
-	public static function maybe_install(): void {
-		if ( self::DB_VERSION !== get_option( self::DB_VERSION_OPTION ) ) {
-			self::install();
-		}
 	}
 
 	/**
