@@ -9,7 +9,7 @@ wp() {
 wp rewrite structure '/%postname%/' --quiet
 
 if ! wp user get agent --field=ID >/dev/null 2>&1; then
-	wp user create agent agent@example.com --role=editor --display_name='Agent' --quiet
+	wp user create agent agent@example.com --role=editor --display_name='Agent' --quiet >/dev/null
 fi
 
 post_id=$(wp post list --post_type=post --title='Summer Sale' --post_status=publish --field=ID --posts_per_page=1 | tail -n 1)
