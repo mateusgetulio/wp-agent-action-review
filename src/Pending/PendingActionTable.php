@@ -121,6 +121,38 @@ final class PendingActionTable implements WP_Agent_Pending_Action_Store {
 	}
 
 	/**
+	 * Several actions by ID in one query, keyed by ID. Corrupt rows are skipped.
+	 *
+	 * @param string[] $action_ids Action IDs.
+	 * @return array<string, WP_Agent_Pending_Action>
+	 */
+	public function get_many( array $action_ids ): array {
+		global $wpdb;
+
+		$action_ids = array_values( array_unique( array_filter( $action_ids, 'is_string' ) ) );
+
+		if ( array() === $action_ids ) {
+			return array();
+		}
+
+		$placeholders = implode( ', ', array_fill( 0, count( $action_ids ), '%s' ) );
+		$rows         = $wpdb->get_results(
+			$wpdb->prepare( "SELECT * FROM %i WHERE action_id IN ({$placeholders})", array_merge( array( self::table() ), $action_ids ) ), // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQLPlaceholders.ReplacementsWrongNumber -- $placeholders is a generated list of %s placeholders.
+			ARRAY_A
+		);
+
+		$actions = array();
+		foreach ( $rows as $row ) {
+			$action = $this->hydrate( $row );
+			if ( null !== $action ) {
+				$actions[ $action->get_action_id() ] = $action;
+			}
+		}
+
+		return $actions;
+	}
+
+	/**
 	 * List actions, newest first.
 	 *
 	 * Supported filters: status, kind, creator, limit (default 50, max 200), offset.

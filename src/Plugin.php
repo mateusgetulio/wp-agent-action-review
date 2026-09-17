@@ -10,12 +10,14 @@ namespace AgentActionReview;
 defined( 'ABSPATH' ) || exit;
 
 use AgentActionReview\Abilities\Registrar;
+use AgentActionReview\Admin\AdminPage;
 use AgentActionReview\Actions\PostRead;
 use AgentActionReview\Actions\PostTitleUpdate;
 use AgentActionReview\Actions\PostTrash;
 use AgentActionReview\Audit\EventLog;
 use AgentActionReview\Pending\PendingActionTable;
 use AgentActionReview\Policy\Executor;
+use AgentActionReview\Review\ReviewHandler;
 
 /**
  * Checks dependencies and wires the plugin's services.
@@ -106,7 +108,14 @@ final class Plugin {
 		$events   = new EventLog();
 		$executor = new Executor( $pending, $events );
 
-		( new Registrar( $executor, self::handlers() ) )->register();
+		$handlers = self::handlers();
+
+		( new Registrar( $executor, $handlers ) )->register();
+		( new ReviewHandler( $pending, $executor, $handlers ) )->register();
+
+		if ( is_admin() ) {
+			( new AdminPage( $pending, $events, $handlers ) )->register();
+		}
 	}
 
 	/**
